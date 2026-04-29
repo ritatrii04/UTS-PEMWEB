@@ -1,0 +1,170 @@
+<?php
+// 1. Tambahkan ini di paling atas untuk mendeteksi jika ada error
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+session_start();
+
+/** * CATATAN PATH: 
+ * Jika index.php ada di folder 'api', sedangkan koneksi.php ada di folder atasnya,
+ * gunakan: include '../koneksi.php';
+ * Jika semuanya satu folder, gunakan: include 'koneksi.php';
+ */
+if (file_exists('../koneksi.php')) {
+    include 'api/koneksi.php';
+    $path_prefix = "../"; // Link ke folder luar
+} else {
+    include 'api/koneksi.php';
+    $path_prefix = ""; 
+}
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Homestay Bali - Penginapan Nyaman</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background: #f8f9fa; font-family: 'Inter', sans-serif; }
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
+                        url("https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1300&q=80");
+            background-size: cover;
+            background-position: center;
+            height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+        }
+        .search-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: -60px;
+            position: relative;
+            z-index: 10;
+        }
+        .card-homestay {
+            border: none;
+            border-radius: 15px;
+            transition: 0.3s;
+        }
+        .card-homestay:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .btn-primary { border-radius: 8px; padding: 10px 25px; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="index.php">HOMESTAY BALI</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item"><a class="nav-link active" href="index.php">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="<?= $path_prefix ?>booking.php">Booking</a></li>
+                <?php if(isset($_SESSION['username'])): ?>
+                    <li class="nav-item dropdown ms-lg-3">
+                        <a class="btn btn-light dropdown-toggle fw-bold" href="#" data-bs-toggle="dropdown">
+                            Hi, <?= $_SESSION['username'] ?>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
+                            <li><a class="dropdown-item" href="<?= $path_prefix ?><?= ($_SESSION['role'] == 'admin') ? 'dashboard.admin.php' : 'dashboard_user.php' ?>">Dashboard</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="<?= $path_prefix ?>logout.php">Logout</a></li>
+                        </ul>
+                    </li>
+                <?php else: ?>
+                    <li class="nav-item ms-lg-3">
+                        <a class="btn btn-warning fw-bold" href="<?= $path_prefix ?>login.php">Login</a>
+                    </li>
+                <?php endif; ?>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<header class="hero">
+    <div class="container">
+        <h1 class="display-3 fw-bold mb-3">Liburan Impian di Bali</h1>
+        <p class="lead mb-4">Temukan homestay terbaik dengan harga terjangkau dan fasilitas lengkap.</p>
+        <a href="#eksplor" class="btn btn-warning btn-lg fw-bold">Mulai Jelajah</a>
+    </div>
+</header>
+
+<div class="container">
+    <div class="search-container">
+        <form action="<?= $path_prefix ?>booking.php" method="GET" class="row g-3">
+            <div class="col-md-5">
+                <label class="form-label fw-bold small">Cari Lokasi</label>
+                <input type="text" class="form-control" placeholder="Contoh: Ubud, Kuta, Canggu">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold small">Tipe Kamar</label>
+                <select class="form-select">
+                    <option selected>Pilih Tipe...</option>
+                    <option>Standard</option>
+                    <option>Deluxe</option>
+                    <option>Suite</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100 fw-bold">Cari Homestay</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<section id="eksplor" class="container py-5 mt-4">
+    <h2 class="text-center fw-bold mb-5">Kenapa Memilih Kami?</h2>
+    <div class="row g-4 text-center">
+        <div class="col-md-4">
+            <i class="bi bi-shield-check text-primary display-4"></i>
+            <h5 class="mt-3 fw-bold">Keamanan Terjamin</h5>
+            <p class="text-muted">Proses booking aman dan terverifikasi 100%.</p>
+        </div>
+        <div class="col-md-4">
+            <i class="bi bi-wallet2 text-primary display-4"></i>
+            <h5 class="mt-3 fw-bold">Harga Terbaik</h5>
+            <p class="text-muted">Harga bersaing dengan kualitas pelayanan bintang lima.</p>
+        </div>
+        <div class="col-md-4">
+            <i class="bi bi-geo-alt text-primary display-4"></i>
+            <h5 class="mt-3 fw-bold">Lokasi Strategis</h5>
+            <p class="text-muted">Dekat dengan tempat wisata populer di Bali.</p>
+        </div>
+    </div>
+</section>
+
+<footer class="bg-dark text-white py-5 mt-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <h4 class="fw-bold mb-3">HOMESTAY BALI</h4>
+                <p class="text-secondary small">Platform penyedia akomodasi homestay terbaik di Bali. Memberikan kenyamanan maksimal untuk pengalaman liburan Anda.</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <h5 class="mb-3">Hubungi Kami</h5>
+                <p class="text-secondary small">Email: support@homestaybali.com<br>WhatsApp: +62 812 3456 7890</p>
+            </div>
+        </div>
+        <hr class="border-secondary my-4">
+        <div class="text-center text-secondary small">
+            &copy; 2026 Homestay Bali Project. All Rights Reserved.
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
