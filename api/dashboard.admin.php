@@ -2,9 +2,18 @@
 session_start();
 require_once __DIR__ . '/koneksi.php';
 
+if (!$conn) {
+    die('Error: Database connection failed. Please check koneksi.php');
+}
+
 if (!isset($_SESSION['username']) || $_SESSION['role'] != "admin") {
     header("Location: login.php");
     exit();
+}
+
+// Generate CSRF token for forms
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(24));
 }
 
 // --- LOGIKA MENGAMBIL DATA DARI API BPS ---
@@ -16,9 +25,12 @@ $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $apiUrl);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-// FIX: Tambah 2 baris ini agar cURL tidak error SSL di XAMPP localhost
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+// FIX: Disable SSL verification hanya di development/localhost
+// Untuk production, hapus 2 baris ini atau set ke true
+if (getenv('SERVER_ENV') !== 'production') {
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+}
 $response = curl_exec($ch);
 $curlError = curl_error($ch);
 curl_close($ch);
@@ -30,25 +42,48 @@ if ($response) {
 
 // LOGIKA TAMBAH KAMAR
 if (isset($_POST['tambah_kamar'])) {
-    $nama    = mysqli_real_escape_string($conn, $_POST['nama_kamar']);
-    $harga   = (int) $_POST['harga'];
-    $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
-    $foto    = mysqli_real_escape_string($conn, $_POST['foto']);
-
-    $query = "INSERT INTO kamar (nama_kamar, harga, deskripsi, foto) VALUES ('$nama', '$harga', '$deskripsi', '$foto')";
-    if (mysqli_query($conn, $query)) {
-        echo "<script>alert('Kamar berhasil ditambahkan!');</script>";
+    // CSRF token check
+    if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+        echo "<script>alert('Token CSRF tidak valid. Silakan muat ulang halaman.');</script>";
     } else {
-        echo "<script>alert('Gagal menambah kamar: " . mysqli_error($conn) . "');</script>";
+    $nama    = trim($_POST['nama_kamar'] ?? '');
+    $harga   = isset($_POST['harga']) ? (int)$_POST['harga'] : 0;
+    $deskripsi = trim($_POST['deskripsi'] ?? '');
+    $foto    = trim($_POST['foto'] ?? '');
+
+    if (empty($nama) || $harga <= 0) {
+        echo "<script>alert('Nama kamar dan harga harus diisi dengan benar!');</script>";
+    } else {
+        $stmt = $conn->prepare("INSERT INTO kamar (nama_kamar, harga, deskripsi, foto) VALUES (?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param("siss", $nama, $harga, $deskripsi, $foto);
+            if ($stmt->execute()) {
+                echo "<script>alert('Kamar berhasil ditambahkan!'); window.location='dashboard.admin.php';</script>";
+            } else {
+                echo "<script>alert('Gagal menambah kamar: " . addslashes($stmt->error) . "');</script>";
+            }
+            $stmt->close();
+        } else {
+            echo "<script>alert('Error prepare statement: " . addslashes($conn->error) . "');</script>";
+        }
+    }
     }
 }
 
 // LOGIKA HAPUS KAMAR
 if (isset($_GET['hapus'])) {
     $id = (int) $_GET['hapus'];
-    mysqli_query($conn, "DELETE FROM kamar WHERE id = $id");
-    header("Location: dashboard.admin.php");
-    exit();
+    if ($id > 0) {
+        $stmt = $conn->prepare("DELETE FROM kamar WHERE id = ?");
+        if ($stmt) {
+            $stmt->bind_param("i", $id);
+            if ($stmt->execute()) {
+                header("Location: dashboard.admin.php");
+                exit();
+            }
+            $stmt->close();
+        }
+    }
 }
 ?>
 
@@ -141,7 +176,8 @@ if (isset($_GET['hapus'])) {
         <div class="col-md-5">
             <div class="card shadow-sm p-4 mb-4">
                 <h5 class="fw-bold mb-3"><i class="fas fa-plus-circle me-2 text-success"></i>Tambah Kamar Baru</h5>
-                <form method="POST">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <div class="mb-3">
                         <label class="form-label">Nama Kamar</label>
                         <input type="text" name="nama_kamar" class="form-control" placeholder="Contoh: Suite Room" required>
@@ -182,11 +218,13 @@ if (isset($_GET['hapus'])) {
                         </thead>
                         <tbody>
                             <?php
-                            $tampil = mysqli_query($conn, "SELECT * FROM kamar ORDER BY id ASC");
-                            $no = 1;
-                            if (mysqli_num_rows($tampil) > 0) {
-                                while ($k = mysqli_fetch_assoc($tampil)) {
-                                    // FIX: Gunakan 'nama_kamar' bukan 'kamar'
+                            $stmt_kamar = $conn->prepare("SELECT * FROM kamar ORDER BY id ASC");
+                            if ($stmt_kamar) {
+                                $stmt_kamar->execute();
+                                $result_kamar = $stmt_kamar->get_result();
+                                $no = 1;
+                                if ($result_kamar && mysqli_num_rows($result_kamar) > 0) {
+                                    while ($k = $result_kamar->fetch_assoc()) {
                                     $foto_url = !empty($k['foto']) 
                                         ? htmlspecialchars($k['foto']) 
                                         : 'https://via.placeholder.com/50x40?text=No+Foto';
@@ -199,10 +237,10 @@ if (isset($_GET['hapus'])) {
                                                  style='width:60px;height:45px;object-fit:cover;border-radius:6px;'
                                                  onerror=\"this.src='https://via.placeholder.com/60x45?text=Error'\">
                                         </td>
-                                        <td><strong>" . htmlspecialchars($k['kamar']) . "</strong></td>
+                                        <td><strong>" . htmlspecialchars($k['nama_kamar']) . "</strong></td>
                                         <td>Rp " . number_format($k['harga'], 0, ',', '.') . "</td>
                                         <td>
-                                            <a href='edit.kamar.php?id={$k['id']}' class='btn btn-sm btn-info text-white me-1'>
+                                            <a href='edit_kamar.php?id={$k['id']}' class='btn btn-sm btn-info text-white me-1'>
                                                 <i class='fas fa-edit'></i> Edit
                                             </a>
                                             <a href='dashboard.admin.php?hapus={$k['id']}' 

@@ -1,4 +1,7 @@
-<?php session_start(); ?>
+<?php
+session_start();
+require_once __DIR__ . '/koneksi.php';
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -29,23 +32,23 @@
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="Home.php">HOMESTAY BALI</a>
+        <a class="navbar-brand fw-bold" href="home.php">HOMESTAY BALI</a>
         <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#menu">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="menu">
             <ul class="navbar-nav ms-auto align-items-center">
-                <li class="nav-item"><a class="nav-link active" href="Home.php">Home</a></li>
+                <li class="nav-item"><a class="nav-link active" href="home.php">Home</a></li>
                 <li class="nav-item"><a class="nav-link" href="booking.php">Booking</a></li>
                 <li class="nav-item"><a class="nav-link" href="profil.php">Profil</a></li>
                 <li class="nav-item"><a class="nav-link" href="promo.php">Promo</a></li>
            
                 
                 <?php if(isset($_SESSION['username'])): ?>
-                    <li class="nav-item"><a class="btn btn-success ms-lg-3" href="<?php echo ($_SESSION['role'] == 'admin') ? 'dashboard admin.php' : 'dashboard user.php'; ?>">Dashboard</a></li>
+                    <li class="nav-item"><a class="btn btn-success ms-lg-3" href="<?php echo ($_SESSION['role'] == 'admin') ? 'dashboard.admin.php' : 'dashboard_user.php'; ?>">Dashboard</a></li>
                     <li class="nav-item"><a class="btn btn-danger ms-2" href="logout.php">Logout</a></li>
                 <?php else: ?>
-                    <li class="nav-item"><a class="btn btn-warning ms-lg-3" href="Login.php">Masuk</a></li>
+                    <li class="nav-item"><a class="btn btn-warning ms-lg-3" href="login.php">Masuk</a></li>
                 <?php endif; ?>
             </ul>
         </div>

@@ -10,13 +10,8 @@ session_start();
  * gunakan: include '../koneksi.php';
  * Jika semuanya satu folder, gunakan: include 'koneksi.php';
  */
-if (file_exists('../koneksi.php')) {
-    include 'api/koneksi.php';
-    $path_prefix = "../"; // Link ke folder luar
-} else {
-    include 'api/koneksi.php';
-    $path_prefix = ""; 
-}
+include 'api/koneksi.php';
+$path_prefix = "api/";
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -65,13 +60,13 @@ if (file_exists('../koneksi.php')) {
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="index.html">HOMESTAY BALI</a>
+        <a class="navbar-brand fw-bold" href="index.php">HOMESTAY BALI</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto align-items-center">
-                <li class="nav-item"><a class="nav-link active" href="index.html">Home</a></li>
+                <li class="nav-item"><a class="nav-link active" href="index.php">Home</a></li>
                 <li class="nav-item"><a class="nav-link" href="<?= $path_prefix ?>booking.php">Booking</a></li>
                 <?php if(isset($_SESSION['username'])): ?>
                     <li class="nav-item dropdown ms-lg-3">
@@ -107,11 +102,11 @@ if (file_exists('../koneksi.php')) {
         <form action="<?= $path_prefix ?>booking.php" method="GET" class="row g-3">
             <div class="col-md-5">
                 <label class="form-label fw-bold small">Cari Lokasi</label>
-                <input type="text" class="form-control" placeholder="Contoh: Ubud, Kuta, Canggu">
+                <input type="text" name="lokasi" class="form-control" placeholder="Contoh: Ubud, Kuta, Canggu">
             </div>
             <div class="col-md-4">
                 <label class="form-label fw-bold small">Tipe Kamar</label>
-                <select class="form-select">
+                <select class="form-select" name="tipe">
                     <option selected>Pilih Tipe...</option>
                     <option>Standard</option>
                     <option>Deluxe</option>

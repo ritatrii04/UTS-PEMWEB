@@ -1,13 +1,17 @@
 <?php 
 session_start(); 
-include 'koneksi.php';
+require_once __DIR__ . '/koneksi.php';
+
+if (!$conn) {
+    die('Error: Database connection failed. Please check koneksi.php');
+}
 
 if (isset($_POST['login'])) {
     $username = mysqli_real_escape_string($conn, $_POST['username']);
     $password = $_POST['password'];
     
     // Mencari user berdasarkan username
-    $stmt = $conn->prepare("SELECT * FROM user WHERE username = ?");
+    $stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result();

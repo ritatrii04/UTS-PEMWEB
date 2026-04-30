@@ -1,6 +1,10 @@
 <?php
 session_start();
-include 'koneksi.php';
+require_once __DIR__ . '/koneksi.php';
+
+if (!$conn) {
+    die('Error: Database connection failed. Please check koneksi.php');
+}
 
 // cek login user
 if (!isset($_SESSION['username']) || $_SESSION['role'] != "user") {
@@ -8,10 +12,21 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] != "user") {
     exit();
 }
 
-// ambil data user dari database
+// ambil data user dari database menggunakan prepared statement
 $username = $_SESSION['username'];
-$query = mysqli_query($conn, "SELECT * FROM users WHERE username='$username'");
-$user = mysqli_fetch_assoc($query);
+$stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
+if ($stmt) {
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
+    $stmt->close();
+    if (!$user) {
+        die("User tidak ditemukan di database!");
+    }
+} else {
+    die("Error prepare statement: " . $conn->error);
+}
 ?>
 
 <!DOCTYPE html>

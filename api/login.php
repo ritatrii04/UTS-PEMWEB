@@ -1,5 +1,7 @@
 <?php 
-session_start(); 
+session_start();
+require_once __DIR__ . '/koneksi.php';
+
 // Cegah user yang sudah login kembali ke halaman login
 if (isset($_SESSION['username'])) {
     if ($_SESSION['role'] == 'admin') {

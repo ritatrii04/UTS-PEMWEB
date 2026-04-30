@@ -1,3 +1,12 @@
+<?php
+session_start();
+require_once __DIR__ . '/koneksi.php';
+
+if (isset($_SESSION['username'])) {
+    header('Location: ' . ($_SESSION['role'] === 'admin' ? 'dashboard.admin.php' : 'dashboard_user.php'));
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -15,6 +24,18 @@
     <p class="text-muted text-center mb-4">Lengkapi data untuk memesan homestay</p>
     
     <form action="proses_register.php" method="POST">
+        <div class="mb-3">
+            <label class="form-label">Nama Lengkap</label>
+            <input type="text" name="nama" class="form-control" placeholder="Nama lengkap" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" placeholder="Email aktif" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Nomor HP</label>
+            <input type="text" name="no_hp" class="form-control" placeholder="0821xxxxxxx" required>
+        </div>
         <div class="mb-3">
             <label class="form-label">Username</label>
             <input type="text" name="username" class="form-control" placeholder="Buat username" required>

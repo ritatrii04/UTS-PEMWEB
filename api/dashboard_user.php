@@ -1,5 +1,11 @@
 <?php
 session_start();
+require_once __DIR__ . '/koneksi.php';
+
+if (!$conn) {
+    die('Error: Database connection failed. Please check koneksi.php');
+}
+
 if (!isset($_SESSION['username']) || $_SESSION['role'] != "user") {
     header("Location: login.php");
     exit();

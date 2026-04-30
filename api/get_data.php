@@ -1,6 +1,10 @@
 <?php
 session_start();
-include 'koneksi.php';
+require_once __DIR__ . '/koneksi.php';
+
+if (!$conn) {
+    die('Error: Database connection failed. Please check koneksi.php');
+}
 
 // 1. PROTEKSI HALAMAN: Hanya Admin yang boleh masuk
 if (!isset($_SESSION['username']) || $_SESSION['role'] != "admin") {
@@ -10,24 +14,41 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] != "admin") {
 
 // 2. LOGIKA TAMBAH KAMAR
 if (isset($_POST['tambah_kamar'])) {
-    $nama = mysqli_real_escape_string($conn, $_POST['nama_kamar']);
-    $harga = $_POST['harga'];
-    $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
-    $foto = $_POST['foto']; // Link gambar atau nama file
+    $nama = trim($_POST['nama_kamar'] ?? '');
+    $harga = isset($_POST['harga']) ? (int)$_POST['harga'] : 0;
+    $deskripsi = trim($_POST['deskripsi'] ?? '');
+    $foto = trim($_POST['foto'] ?? '');
 
-    $query = "INSERT INTO kamar (nama_kamar, harga, deskripsi, foto) VALUES ('$nama', '$harga', '$deskripsi', '$foto')";
-    if (mysqli_query($conn, $query)) {
-        echo "<script>alert('Kamar berhasil ditambahkan!'); window.location='dashboard.admin.php';</script>";
+    if (empty($nama) || $harga <= 0) {
+        echo "<script>alert('Nama kamar dan harga harus diisi dengan benar!');</script>";
     } else {
-        echo "Error: " . mysqli_error($conn);
+        $stmt = $conn->prepare("INSERT INTO kamar (nama_kamar, harga, deskripsi, foto) VALUES (?, ?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param("siss", $nama, $harga, $deskripsi, $foto);
+            if ($stmt->execute()) {
+                echo "<script>alert('Kamar berhasil ditambahkan!'); window.location='dashboard.admin.php';</script>";
+            } else {
+                echo "<script>alert('Gagal menambah kamar: " . addslashes($stmt->error) . "');</script>";
+            }
+            $stmt->close();
+        }
     }
 }
 
 // 3. LOGIKA HAPUS KAMAR
 if (isset($_GET['hapus'])) {
-    $id = $_GET['hapus'];
-    mysqli_query($conn, "DELETE FROM kamar WHERE id= $id");
-    header("Location: dashboard.admin.php");
+    $id = (int) $_GET['hapus'];
+    if ($id > 0) {
+        $stmt = $conn->prepare("DELETE FROM kamar WHERE id = ?");
+        if ($stmt) {
+            $stmt->bind_param("i", $id);
+            if ($stmt->execute()) {
+                header("Location: dashboard.admin.php");
+                exit();
+            }
+            $stmt->close();
+        }
+    }
 }
 
 // 4. LOGIKA AMBIL DATA API BPS (Sensus/Data Wisatawan)
@@ -91,7 +112,18 @@ if ($response) {
                     <div class="bg-primary-subtle p-3 rounded-circle me-3"><i class="bi bi-house-door text-primary fs-4"></i></div>
                     <div>
                         <p class="text-muted small mb-0">Total Kamar</p>
-                        <h4 class="fw-bold mb-0"><?php echo mysqli_num_rows(mysqli_query($conn, "SELECT * FROM kamar")); ?></h4>
+                        <?php
+                        $stmt_count = $conn->prepare("SELECT COUNT(*) as total FROM kamar");
+                        if ($stmt_count) {
+                            $stmt_count->execute();
+                            $result_count = $stmt_count->get_result();
+                            $row_count = $result_count->fetch_assoc();
+                            echo "<h4 class=\"fw-bold mb-0\">{$row_count['total']}</h4>";
+                            $stmt_count->close();
+                        } else {
+                            echo "<h4 class=\"fw-bold mb-0\">0</h4>";
+                        }
+                        ?>
                     </div>
                 </div>
             </div>
@@ -149,14 +181,18 @@ if ($response) {
                         </thead>
                         <tbody>
                             <?php
-                            $res = mysqli_query($conn, "SELECT * FROM kamar ORDER BY id DESC");
-                            while($k = mysqli_fetch_assoc($res)):
-                            ?>
+                            $stmt_kamar = $conn->prepare("SELECT * FROM kamar ORDER BY id DESC");
+                            if ($stmt_kamar) {
+                                $stmt_kamar->execute();
+                                $result_kamar = $stmt_kamar->get_result();
+                                if ($result_kamar && mysqli_num_rows($result_kamar) > 0) {
+                                    while($k = $result_kamar->fetch_assoc()):  
+                                    ?>
                             <tr>
-                                <td class="fw-semibold text-primary"><?= $k['nama'] ?></td>
+                                <td class="fw-semibold text-primary"><?= htmlspecialchars($k['nama_kamar']) ?></td>
                                 <td>Rp <?= number_format($k['harga'], 0, ',', '.') ?></td>
                                 <td class="text-center">
-                                    <a href="?hapus=<?= $k['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus kamar ini?')">
+                                    <a href="edit_kamar.php?id=<?= $k['id'] ?>" class="btn btn-sm btn-outline-info">
                                         <i class="bi bi-trash"></i>
                                     </a> 
                                 </td>
