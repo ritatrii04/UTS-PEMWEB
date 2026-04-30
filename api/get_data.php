@@ -12,9 +12,16 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] != "admin") {
     exit();
 }
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(24));
+}
+
 // 2. LOGIKA TAMBAH KAMAR
 if (isset($_POST['tambah_kamar'])) {
-    $nama = trim($_POST['nama_kamar'] ?? '');
+    if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+        echo "<script>alert('Token CSRF tidak valid. Silakan muat ulang halaman.');</script>";
+    } else {
+        $nama = trim($_POST['nama_kamar'] ?? '');
     $harga = isset($_POST['harga']) ? (int)$_POST['harga'] : 0;
     $deskripsi = trim($_POST['deskripsi'] ?? '');
     $foto = trim($_POST['foto'] ?? '');
@@ -33,13 +40,17 @@ if (isset($_POST['tambah_kamar'])) {
             $stmt->close();
         }
     }
+    }
 }
 
 // 3. LOGIKA HAPUS KAMAR
 if (isset($_GET['hapus'])) {
     $id = (int) $_GET['hapus'];
-    if ($id > 0) {
-        $stmt = $conn->prepare("DELETE FROM kamar WHERE id = ?");
+    if (empty($_GET['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_GET['csrf_token'])) {
+        echo "<script>alert('Token CSRF tidak valid.'); window.location='get_data.php';</script>";
+    } else {
+        if ($id > 0) {
+            $stmt = $conn->prepare("DELETE FROM kamar WHERE id = ?");
         if ($stmt) {
             $stmt->bind_param("i", $id);
             if ($stmt->execute()) {
@@ -48,6 +59,7 @@ if (isset($_GET['hapus'])) {
             }
             $stmt->close();
         }
+    }
     }
 }
 
@@ -146,6 +158,7 @@ if ($response) {
             <div class="card p-4">
                 <h5 class="fw-bold mb-4">Kelola Kamar Baru</h5>
                 <form action="" method="POST">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <div class="mb-3">
                         <label class="form-label small">Nama Kamar</label>
                         <input type="text" name="nama_kamar" class="form-control" placeholder="E.g: Suite Room" required>
@@ -193,8 +206,11 @@ if ($response) {
                                 <td>Rp <?= number_format($k['harga'], 0, ',', '.') ?></td>
                                 <td class="text-center">
                                     <a href="edit_kamar.php?id=<?= $k['id'] ?>" class="btn btn-sm btn-outline-info">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="get_data.php?hapus=<?= $k['id'] ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Yakin hapus kamar ini?')">
                                         <i class="bi bi-trash"></i>
-                                    </a> 
+                                    </a>
                                 </td>
                             </tr>
                             <?php endwhile; ?>

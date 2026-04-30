@@ -6,12 +6,12 @@ if (!$conn) {
 }
 
 if (isset($_POST['register'])) {
-    $username = mysqli_real_escape_string($conn, $_POST['username']);
+    $username = trim($_POST['username']);
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
-    $nama = mysqli_real_escape_string($conn, $_POST['nama']);
-    $email = mysqli_real_escape_string($conn, $_POST['email']);
-    $no_hp = mysqli_real_escape_string($conn, $_POST['no_hp']);
+    $nama = trim($_POST['nama']);
+    $email = trim($_POST['email']);
+    $no_hp = trim($_POST['no_hp']);
     $role = 'user';
 
     // 1. Cek apakah password dan konfirmasi password cocok

@@ -7,7 +7,7 @@ if (!$conn) {
 }
 
 if (isset($_POST['login'])) {
-    $username = mysqli_real_escape_string($conn, $_POST['username']);
+    $username = trim($_POST['username']);
     $password = $_POST['password'];
     
     // Mencari user berdasarkan username

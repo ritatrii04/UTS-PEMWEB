@@ -12,14 +12,20 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] != 'user') {
 }
 
 $username = $_SESSION['username'];
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(24));
+}
 $success = '';
 $error = '';
 $user = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nama = trim($_POST['nama'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $no_hp = trim($_POST['no_hp'] ?? '');
+    if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+        $error = 'Token CSRF tidak valid. Silakan muat ulang halaman.';
+    } else {
+        $nama = trim($_POST['nama'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $no_hp = trim($_POST['no_hp'] ?? '');
 
     // Validate inputs
     if (empty($nama) || empty($email)) {
@@ -39,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $error = 'Error prepare statement: ' . $conn->error;
         }
+    }
     }
 }
 
@@ -84,6 +91,7 @@ if ($stmt) {
                     <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
                 <?php endif; ?>
                 <form method="POST">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <div class="mb-3">
                         <label class="form-label">Nama Lengkap</label>
                         <input type="text" name="nama" class="form-control" value="<?= htmlspecialchars($user['nama']) ?>" required>

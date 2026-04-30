@@ -73,15 +73,19 @@ if (isset($_POST['tambah_kamar'])) {
 // LOGIKA HAPUS KAMAR
 if (isset($_GET['hapus'])) {
     $id = (int) $_GET['hapus'];
-    if ($id > 0) {
-        $stmt = $conn->prepare("DELETE FROM kamar WHERE id = ?");
-        if ($stmt) {
-            $stmt->bind_param("i", $id);
-            if ($stmt->execute()) {
-                header("Location: dashboard.admin.php");
-                exit();
+    if (empty($_GET['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_GET['csrf_token'])) {
+        echo "<script>alert('Token CSRF tidak valid. Silakan muat ulang halaman.'); window.location='dashboard.admin.php';</script>";
+    } else {
+        if ($id > 0) {
+            $stmt = $conn->prepare("DELETE FROM kamar WHERE id = ?");
+            if ($stmt) {
+                $stmt->bind_param("i", $id);
+                if ($stmt->execute()) {
+                    header("Location: dashboard.admin.php");
+                    exit();
+                }
+                $stmt->close();
             }
-            $stmt->close();
         }
     }
 }
@@ -243,7 +247,7 @@ if (isset($_GET['hapus'])) {
                                             <a href='edit_kamar.php?id={$k['id']}' class='btn btn-sm btn-info text-white me-1'>
                                                 <i class='fas fa-edit'></i> Edit
                                             </a>
-                                            <a href='dashboard.admin.php?hapus={$k['id']}' 
+                                            <a href='dashboard.admin.php?hapus={$k['id']}&csrf_token={$_SESSION['csrf_token']}' 
                                                class='btn btn-sm btn-danger'
                                                onclick=\"return confirm('Yakin hapus kamar ini?')\">
                                                 <i class='fas fa-trash'></i> Hapus
