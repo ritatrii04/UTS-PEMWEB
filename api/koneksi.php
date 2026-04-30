@@ -65,4 +65,56 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS kamar (
 
 // Set charset to utf8mb4
 mysqli_set_charset($conn, "utf8mb4");
+
+// Create table sessions if not exists
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS sessions (
+    id VARCHAR(128) PRIMARY KEY,
+    data TEXT NOT NULL,
+    last_access INT UNSIGNED NOT NULL
+)");
+
+// Custom session handler using the existing connection
+class DBSessionHandler implements SessionHandlerInterface {
+    private $conn;
+    public function __construct($conn) {
+        $this->conn = $conn;
+    }
+    public function open(string $path, string $name): bool { return true; }
+    public function close(): bool { return true; }
+    
+    #[\ReturnTypeWillChange]
+    public function read(string $id) {
+        $stmt = $this->conn->prepare("SELECT data FROM sessions WHERE id = ?");
+        $stmt->bind_param("s", $id);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if ($row = $res->fetch_assoc()) {
+            return $row['data'];
+        }
+        return "";
+    }
+    public function write(string $id, string $data): bool {
+        $time = time();
+        $stmt = $this->conn->prepare("REPLACE INTO sessions (id, data, last_access) VALUES (?, ?, ?)");
+        $stmt->bind_param("ssi", $id, $data, $time);
+        return $stmt->execute();
+    }
+    public function destroy(string $id): bool {
+        $stmt = $this->conn->prepare("DELETE FROM sessions WHERE id = ?");
+        $stmt->bind_param("s", $id);
+        return $stmt->execute();
+    }
+    
+    #[\ReturnTypeWillChange]
+    public function gc(int $max_lifetime) {
+        $old = time() - $max_lifetime;
+        $stmt = $this->conn->prepare("DELETE FROM sessions WHERE last_access < ?");
+        $stmt->bind_param("i", $old);
+        return $stmt->execute();
+    }
+}
+
+$handler = new DBSessionHandler($conn);
+session_set_save_handler($handler, true);
+session_start();
 ?>

@@ -1,5 +1,4 @@
 <?php 
-session_start();
 require_once __DIR__ . '/koneksi.php';
 
 // Cegah user yang sudah login kembali ke halaman login
