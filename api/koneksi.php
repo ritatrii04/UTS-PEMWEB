@@ -54,6 +54,23 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS users (
     no_hp VARCHAR(20) NOT NULL
 )");
 
+// Cek apakah sudah ada admin, jika belum buat satu
+$checkAdmin = $conn->query("SELECT id FROM users WHERE role = 'admin' LIMIT 1");
+if ($checkAdmin && $checkAdmin->num_rows == 0) {
+    $adminUser = 'admin';
+    $adminPass = password_hash('admin123', PASSWORD_DEFAULT); // Password default: admin123
+    $adminNama = 'Administrator';
+    $adminEmail = 'admin@homestay.com';
+    $adminNoHp = '08123456789';
+    
+    $stmt = $conn->prepare("INSERT INTO users (username, password, role, nama, email, no_hp) VALUES (?, ?, 'admin', ?, ?, ?)");
+    if ($stmt) {
+        $stmt->bind_param("sssss", $adminUser, $adminPass, $adminNama, $adminEmail, $adminNoHp);
+        $stmt->execute();
+        $stmt->close();
+    }
+}
+
 // Create table kamar if not exists
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS kamar (
     id INT AUTO_INCREMENT PRIMARY KEY,
