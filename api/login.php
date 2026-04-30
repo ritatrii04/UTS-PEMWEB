@@ -41,7 +41,7 @@ if (isset($_SESSION['username'])) {
     
     <div class="text-center">
         <p class="small mb-0">Belum punya akun? <a href="register.php" class="text-decoration-none fw-bold text-primary">Daftar Akun Baru</a></p>
-        <a href="home.php" class="text-decoration-none text-muted small mt-2 d-block">← Kembali ke Beranda</a>
+        <a href="../index.html" class="text-decoration-none text-muted small mt-2 d-block">← Kembali ke Beranda</a>
     </div>
 </div>
 </body>

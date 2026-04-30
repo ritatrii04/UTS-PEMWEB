@@ -53,7 +53,7 @@ if (isset($_SESSION['username'])) {
     
     <div class="text-center">
         <p class="small mb-0">Sudah punya akun? <a href="login.php" class="text-decoration-none fw-bold">Login di sini</a></p>
-        <a href="home.php" class="text-decoration-none text-muted small mt-2 d-block">← Kembali ke Beranda</a>
+        <a href="../index.html" class="text-decoration-none text-muted small mt-2 d-block">← Kembali ke Beranda</a>
     </div>
 </div>
 </body>
