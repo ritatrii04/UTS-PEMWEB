@@ -39,6 +39,18 @@ if ($response) {
 }
 // ------------------------------------------
 
+// --- STATISTIK PESANAN ---
+$stat_pending = 0; $stat_confirmed = 0; $stat_total = 0;
+$stmt_stat = $conn->query("SELECT status, COUNT(*) as jml FROM pesanan GROUP BY status");
+if ($stmt_stat) {
+    while ($s = $stmt_stat->fetch_assoc()) {
+        $stat_total += $s['jml'];
+        if ($s['status'] == 'pending') $stat_pending = $s['jml'];
+        if ($s['status'] == 'confirmed') $stat_confirmed = $s['jml'];
+    }
+}
+// --------------------------
+
 // LOGIKA TAMBAH KAMAR
 if (isset($_POST['tambah_kamar'])) {
     // CSRF token check
@@ -121,14 +133,42 @@ if (isset($_GET['hapus'])) {
 
 <nav class="navbar navbar-dark bg-dark mb-4 shadow">
     <div class="container">
-        <a class="navbar-brand"><i class="fas fa-home me-2"></i>Admin Panel Homestay</a>
-        <a href="logout.php" class="btn btn-outline-danger btn-sm">
-            <i class="fas fa-sign-out-alt me-1"></i>Logout
-        </a>
+        <a class="navbar-brand" href="dashboard.admin.php"><i class="fas fa-home me-2"></i>Admin Panel Homestay</a>
+        <div class="d-flex gap-2">
+            <a href="pesanan.admin.php" class="btn btn-outline-warning btn-sm">
+                <i class="fas fa-calendar-check me-1"></i>Pesanan
+                <?php if ($stat_pending > 0): ?><span class="badge bg-danger ms-1"><?= $stat_pending ?></span><?php endif; ?>
+            </a>
+            <a href="logout.php" class="btn btn-outline-danger btn-sm">
+                <i class="fas fa-sign-out-alt me-1"></i>Logout
+            </a>
+        </div>
     </div>
 </nav>
 
 <div class="container">
+
+    <!-- SECTION: Stat Cards Pesanan -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-3" style="border-left: 4px solid #0d6efd !important;">
+                <div class="fs-2 fw-bold text-primary"><?= $stat_total ?></div>
+                <div class="text-muted small">Total Pesanan</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-3" style="border-left: 4px solid #fd7e14 !important;">
+                <div class="fs-2 fw-bold text-warning"><?= $stat_pending ?></div>
+                <div class="text-muted small">Menunggu Konfirmasi</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-3" style="border-left: 4px solid #198754 !important;">
+                <div class="fs-2 fw-bold text-success"><?= $stat_confirmed ?></div>
+                <div class="text-muted small">Terkonfirmasi</div>
+            </div>
+        </div>
+    </div>
 
     <!-- SECTION: Statistik BPS -->
     <div class="row mb-4">

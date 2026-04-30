@@ -63,6 +63,20 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS kamar (
     foto VARCHAR(255)
 )");
 
+// Create table pesanan if not exists
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS pesanan (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    kamar_id INT NOT NULL,
+    tanggal_pesan DATETIME DEFAULT CURRENT_TIMESTAMP,
+    tanggal_checkin DATE,
+    tanggal_checkout DATE,
+    total_harga INT NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending',
+    FOREIGN KEY (kamar_id) REFERENCES kamar(id) ON DELETE CASCADE,
+    FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+)");
+
 // Set charset to utf8mb4
 mysqli_set_charset($conn, "utf8mb4");
 
