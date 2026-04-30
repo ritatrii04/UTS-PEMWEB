@@ -65,13 +65,13 @@ if (file_exists('../koneksi.php')) {
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="index.php">HOMESTAY BALI</a>
+        <a class="navbar-brand fw-bold" href="index.html">HOMESTAY BALI</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto align-items-center">
-                <li class="nav-item"><a class="nav-link active" href="index.php">Home</a></li>
+                <li class="nav-item"><a class="nav-link active" href="index.html">Home</a></li>
                 <li class="nav-item"><a class="nav-link" href="<?= $path_prefix ?>booking.php">Booking</a></li>
                 <?php if(isset($_SESSION['username'])): ?>
                     <li class="nav-item dropdown ms-lg-3">
