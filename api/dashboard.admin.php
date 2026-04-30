@@ -298,7 +298,8 @@ if (isset($_GET['hapus'])) {
                             } else {
                                 echo "<tr><td colspan='5' class='text-center text-muted'>Belum ada data kamar.</td></tr>";
                             }
-                            ?>
+                        }
+                        ?>
                         </tbody>
                     </table>
                 </div>
