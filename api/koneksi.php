@@ -4,17 +4,41 @@ $host = "gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com";
 $port = 4000;
 $user = "3xHv9xaRno2ynL7.root";
 $pass = "0MNShcmHrXByfywt";
-$db   = "booking_homestay";  // Database name
+$db   = "booking_homestay";
 
-// Create connection
-$conn = mysqli_connect($host, $user, $pass, $db);
+// TiDB Cloud Serverless REQUIRES SSL — buat objek mysqli dulu sebelum connect
+$conn = mysqli_init();
 
-// Check connection
 if (!$conn) {
-    error_log("Database Connection Error: " . mysqli_connect_error(), 0);
-    die("Koneksi ke database gagal. Hubungi administrator. Error: " . mysqli_connect_error());
+    die("Inisialisasi mysqli gagal.");
 }
 
-// Set charset to utf8
+// Aktifkan SSL (MYSQLI_CLIENT_SSL)
+// TiDB Cloud menggunakan sertifikat publik yang valid, jadi tidak perlu file CA lokal.
+// Cukup set flag SSL agar koneksi terenkripsi.
+mysqli_ssl_set($conn, null, null, null, null, null);
+
+// Connect dengan port yang benar menggunakan MYSQLI_CLIENT_SSL
+$connected = mysqli_real_connect(
+    $conn,
+    $host,
+    $user,
+    $pass,
+    $db,
+    $port,
+    null,
+    MYSQLI_CLIENT_SSL
+);
+
+// Check connection
+if (!$connected) {
+    error_log("Database Connection Error: " . mysqli_connect_error(), 0);
+    die(json_encode([
+        "error" => "Koneksi ke database gagal.",
+        "detail" => mysqli_connect_error()
+    ]));
+}
+
+// Set charset to utf8mb4
 mysqli_set_charset($conn, "utf8mb4");
 ?>
